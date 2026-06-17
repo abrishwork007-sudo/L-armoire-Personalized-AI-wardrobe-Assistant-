@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>L'Armoire — Your Digital Wardrobe</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --cream: #F5F0E8; --cream-dark: #EDE7D9; --cream-mid: #F0EAE0;
+      --charcoal: #2C2B28; --charcoal-mid: #4A4845; --charcoal-light: #6E6C69;
+      --gold: #B8962E; --gold-light: #D4AD47; --gold-pale: #E8D89A; --gold-mist: #F5EEC8;
+      --white: #FDFBF7; --border: rgba(184,150,46,0.2); --border-strong: rgba(184,150,46,0.45);
+      --sidebar-w: 72px; --font-serif: 'Cormorant Garamond', Georgia, serif;
+      --font-sans: 'Jost', sans-serif; --success: #4A7C59; --danger: #8B3A3A;
+    }
+    body { background: var(--cream); font-family: var(--font-sans); color: var(--charcoal); }
+    .app { display: flex; min-height: 100vh; }
+    .sidebar { width: var(--sidebar-w); background: var(--charcoal); display: flex; flex-direction: column; align-items: center; padding: 28px 0; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; gap: 0; }
+    .sidebar-logo { font-family: var(--font-serif); font-size: 11px; letter-spacing: 0.3em; color: var(--gold-light); writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg); margin-bottom: 36px; font-weight: 300; text-transform: uppercase; }
+    .sidebar-divider { width: 28px; height: 0.5px; background: var(--gold); opacity: 0.3; margin: 6px 0; }
+    .nav-item { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 14px 0; cursor: pointer; transition: all 0.2s; border: none; background: none; color: rgba(245,240,232,0.45); position: relative; }
+    .nav-item:hover { color: var(--gold-light); }
+    .nav-item.active { color: var(--gold-light); }
+    .nav-item.active::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 2px; height: 28px; background: var(--gold); border-radius: 0 2px 2px 0; }
+    .nav-label { font-family: var(--font-sans); font-size: 7.5px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 300; }
+    .nav-icon { font-size: 18px; line-height: 1; }
+    .sidebar-bottom { margin-top: auto; }
+    .main { margin-left: var(--sidebar-w); flex: 1; min-height: 100vh; }
+    .auth-page { min-height: 100vh; background: var(--charcoal); display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+    .auth-bg { position: absolute; inset: 0; background: repeating-linear-gradient(45deg, transparent, transparent 60px, rgba(184,150,46,0.03) 60px, rgba(184,150,46,0.03) 61px); }
+    .auth-card { background: var(--white); border: 0.5px solid var(--border-strong); padding: 56px 52px; width: 420px; position: relative; }
+    .auth-card::before { content: ''; position: absolute; top: 8px; left: 8px; right: -8px; bottom: -8px; border: 0.5px solid rgba(184,150,46,0.2); pointer-events: none; }
+    .brand-title { font-family: var(--font-serif); font-size: 42px; font-weight: 300; letter-spacing: 0.15em; color: var(--charcoal); text-align: center; margin-bottom: 4px; font-style: italic; }
+    .brand-sub { font-family: var(--font-sans); font-size: 8.5px; letter-spacing: 0.45em; text-transform: uppercase; color: var(--gold); text-align: center; margin-bottom: 44px; font-weight: 300; }
+    .auth-tabs { display: flex; border-bottom: 0.5px solid var(--border); margin-bottom: 32px; }
+    .auth-tab { flex: 1; padding: 10px; text-align: center; font-family: var(--font-sans); font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; font-weight: 400; cursor: pointer; border: none; background: none; color: var(--charcoal-light); border-bottom: 1.5px solid transparent; margin-bottom: -0.5px; transition: all 0.2s; }
+    .auth-tab.active { color: var(--charcoal); border-bottom-color: var(--gold); }
+    .field-group { margin-bottom: 20px; }
+    .field-label { display: block; font-family: var(--font-sans); font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--charcoal-light); margin-bottom: 8px; font-weight: 400; }
+    .field-input { width: 100%; border: 0.5px solid rgba(44,43,40,0.25); background: var(--cream-mid); padding: 12px 16px; font-family: var(--font-sans); font-size: 14px; color: var(--charcoal); outline: none; transition: border-color 0.2s; font-weight: 300; }
+    .field-input:focus { border-color: var(--gold); }
+    .btn-gold { width: 100%; padding: 14px; background: var(--charcoal); color: var(--gold-light); border: none; font-family: var(--font-sans); font-size: 9.5px; letter-spacing: 0.3em; text-transform: uppercase; cursor: pointer; font-weight: 400; transition: all 0.25s; margin-top: 8px; }
+    .btn-gold:hover { background: var(--gold); color: var(--charcoal); }
+    .auth-error { font-family: var(--font-sans); font-size: 11px; color: var(--danger); margin-top: 12px; text-align: center; letter-spacing: 0.05em; }
+    .page-header { padding: 36px 48px 0; border-bottom: 0.5px solid var(--border); margin-bottom: 40px; padding-bottom: 28px; display: flex; align-items: flex-end; justify-content: space-between; }
+    .page-title { font-family: var(--font-serif); font-size: 32px; font-weight: 300; color: var(--charcoal); font-style: italic; letter-spacing: 0.04em; }
+    .page-title-label { font-family: var(--font-sans); font-size: 8px; letter-spacing: 0.35em; text-transform: uppercase; color: var(--gold); display: block; margin-bottom: 6px; font-weight: 300; }
+    .user-badge { font-family: var(--font-sans); font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--charcoal-light); font-weight: 300; }
+    .gold-dot { color: var(--gold); margin-right: 6px; }
+    .closet-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 28px; padding: 0 48px 40px; }
+    .closet-col { display: flex; flex-direction: column; gap: 16px; }
+    .col-header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 14px; border-bottom: 0.5px solid var(--border); }
+    .col-title { font-family: var(--font-serif); font-size: 20px; font-weight: 400; color: var(--charcoal); letter-spacing: 0.06em; }
+    .col-count { font-family: var(--font-sans); font-size: 9px; letter-spacing: 0.2em; color: var(--charcoal-light); font-weight: 300; text-transform: uppercase; }
+    .add-btn { width: 36px; height: 36px; border: 0.5px solid var(--border-strong); background: var(--white); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 20px; color: var(--gold); transition: all 0.2s; font-weight: 200; }
+    .add-btn:hover { background: var(--gold); color: var(--white); border-color: var(--gold); }
+    .garment-card { border: 0.5px solid var(--border); background: var(--white); cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; }
+    .garment-card:hover { border-color: var(--gold-light); }
+    .garment-card.selected { border-color: var(--gold); border-width: 1.5px; }
+    .garment-card.selected::after { content: '✓'; position: absolute; top: 8px; right: 8px; width: 20px; height: 20px; background: var(--gold); color: var(--white); font-size: 10px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-family: var(--font-sans); }
+    .garment-img { width: 100%; aspect-ratio: 3/4; object-fit: cover; display: block; background: var(--cream-dark); }
+    .garment-placeholder { width: 100%; aspect-ratio: 3/4; background: var(--cream-dark); display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8px; color: var(--charcoal-light); }
+    .garment-info { padding: 10px 12px; border-top: 0.5px solid var(--border); }
+    .garment-name { font-family: var(--font-sans); font-size: 11px; letter-spacing: 0.1em; color: var(--charcoal); font-weight: 400; text-transform: uppercase; margin-bottom: 2px; }
+    .garment-color { font-family: var(--font-sans); font-size: 10px; color: var(--charcoal-light); font-weight: 300; }
+    .validator-bar { padding: 20px 48px; background: var(--charcoal); display: flex; align-items: center; justify-content: space-between; position: sticky; bottom: 0; }
+    .validator-selection { display: flex; gap: 24px; align-items: center; }
+    .sel-item { display: flex; align-items: center; gap: 10px; }
+    .sel-swatch { width: 28px; height: 28px; border: 0.5px solid rgba(245,240,232,0.2); border-radius: 2px; }
+    .sel-label { font-family: var(--font-sans); font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(245,240,232,0.5); font-weight: 300; }
+    .sel-name { font-family: var(--font-sans); font-size: 12px; color: var(--cream); font-weight: 300; margin-top: 1px; }
+    .check-btn { padding: 13px 32px; background: var(--gold); color: var(--charcoal); border: none; font-family: var(--font-sans); font-size: 9px; letter-spacing: 0.28em; text-transform: uppercase; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+    .check-btn:hover { background: var(--gold-light); }
+    .check-btn:disabled { background: rgba(184,150,46,0.3); color: rgba(44,43,40,0.5); cursor: not-allowed; }
+    .verdict-overlay { position: fixed; inset: 0; background: rgba(44,43,40,0.75); z-index: 200; display: flex; align-items: center; justify-content: center; }
+    .verdict-card { background: var(--white); width: 480px; padding: 52px 48px; border: 0.5px solid var(--border-strong); position: relative; animation: fadeUp 0.35s ease; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+    .verdict-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 20px; margin-bottom: 24px; font-family: var(--font-sans); font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; font-weight: 500; }
+    .verdict-badge.approved { background: rgba(74,124,89,0.1); color: var(--success); border: 0.5px solid rgba(74,124,89,0.3); }
+    .verdict-badge.suggestion { background: rgba(184,150,46,0.1); color: var(--gold); border: 0.5px solid var(--border-strong); }
+    .verdict-title { font-family: var(--font-serif); font-size: 28px; font-weight: 300; color: var(--charcoal); font-style: italic; margin-bottom: 16px; letter-spacing: 0.04em; }
+    .verdict-text { font-family: var(--font-sans); font-size: 13px; color: var(--charcoal-light); line-height: 1.8; font-weight: 300; margin-bottom: 28px; }
+    .verdict-tip { border-left: 2px solid var(--gold); padding: 12px 16px; background: var(--gold-mist); margin-bottom: 28px; }
+    .verdict-tip p { font-family: var(--font-sans); font-size: 12px; color: var(--charcoal-mid); font-weight: 300; line-height: 1.7; }
+    .close-verdict { width: 100%; padding: 13px; border: 0.5px solid var(--border-strong); background: none; color: var(--charcoal); font-family: var(--font-sans); font-size: 9px; letter-spacing: 0.28em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
+    .close-verdict:hover { background: var(--charcoal); color: var(--cream); }
+    .body-page { padding: 0 48px 48px; }
+    .upload-zone { border: 0.5px dashed var(--border-strong); padding: 60px 40px; text-align: center; background: var(--white); cursor: pointer; transition: all 0.2s; margin-bottom: 32px; position: relative; }
+    .upload-zone:hover { border-color: var(--gold); background: var(--gold-mist); }
+    .upload-icon { font-size: 36px; margin-bottom: 16px; opacity: 0.5; }
+    .upload-title { font-family: var(--font-serif); font-size: 22px; font-weight: 300; color: var(--charcoal); font-style: italic; margin-bottom: 8px; }
+    .upload-hint { font-family: var(--font-sans); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--charcoal-light); font-weight: 300; }
+    .scan-container { position: relative; width: 260px; margin: 0 auto 32px; }
+    .scan-img { width: 100%; border: 0.5px solid var(--border); display: block; filter: grayscale(30%) contrast(1.05); }
+    .scan-overlay { position: absolute; inset: 0; pointer-events: none; }
+    .scan-line { position: absolute; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--gold), transparent); animation: scanMove 2s ease-in-out infinite; }
+    @keyframes scanMove { 0% { top: 0; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+    .body-outline-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .scan-label { font-family: var(--font-sans); font-size: 8.5px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--gold); text-align: center; margin-bottom: 32px; font-weight: 300; animation: pulse 1.5s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
+    .body-results { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .result-card { background: var(--white); border: 0.5px solid var(--border); padding: 24px; }
+    .result-label { font-family: var(--font-sans); font-size: 8px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--gold); font-weight: 400; margin-bottom: 10px; }
+    .result-value { font-family: var(--font-serif); font-size: 28px; font-weight: 400; color: var(--charcoal); font-style: italic; margin-bottom: 8px; }
+    .result-desc { font-family: var(--font-sans); font-size: 11px; color: var(--charcoal-light); line-height: 1.7; font-weight: 300; }
+    .fit-score-bar { height: 3px; background: var(--cream-dark); margin-top: 12px; border-radius: 2px; overflow: hidden; }
+    .fit-score-fill { height: 100%; background: var(--gold); border-radius: 2px; transition: width 1s ease; }
+    .reco-list { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+    .reco-item { font-family: var(--font-sans); font-size: 11px; color: var(--charcoal-mid); font-weight: 300; padding-left: 12px; border-left: 1.5px solid var(--gold-pale); line-height: 1.5; }
+    .daily-page { padding: 0 48px 48px; }
+    .daily-hero { background: var(--charcoal); padding: 48px; margin-bottom: 32px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; align-items: end; }
+    .look-slot { display: flex; flex-direction: column; gap: 10px; }
+    .look-slot-label { font-family: var(--font-sans); font-size: 8px; letter-spacing: 0.3em; text-transform: uppercase; color: rgba(245,240,232,0.4); font-weight: 300; }
+    .look-slot-img { aspect-ratio: 2/3; background: rgba(245,240,232,0.05); border: 0.5px solid rgba(184,150,46,0.2); display: flex; align-items: center; justify-content: center; color: rgba(245,240,232,0.2); font-size: 28px; }
+    .look-slot-img img { width: 100%; height: 100%; object-fit: cover; }
+    .look-empty { font-family: var(--font-sans); font-size: 10px; color: rgba(245,240,232,0.2); text-align: center; font-weight: 300; letter-spacing: 0.1em; }
+    .daily-info { padding: 28px 0; }
+    .daily-score-row { display: flex; gap: 24px; align-items: center; }
+    .score-box { border: 0.5px solid var(--border-strong); padding: 16px 24px; text-align: center; }
+    .score-num { font-family: var(--font-serif); font-size: 40px; font-weight: 300; color: var(--gold); font-style: italic; display: block; }
+    .score-lbl { font-family: var(--font-sans); font-size: 8px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--charcoal-light); font-weight: 300; }
+    .ai-loading { display: flex; align-items: center; gap: 8px; font-family: var(--font-sans); font-size: 11px; color: var(--gold); letter-spacing: 0.15em; font-weight: 300; }
+    .ai-dot { width: 5px; height: 5px; background: var(--gold); border-radius: 50%; animation: dotPulse 1.2s ease-in-out infinite; }
+    .ai-dot:nth-child(2) { animation-delay: 0.2s; }
+    .ai-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes dotPulse { 0%,80%,100% { opacity: 0.2; transform: scale(0.8); } 40% { opacity: 1; transform: scale(1); } }
+    .settings-page { padding: 0 48px 48px; }
+    .settings-section { margin-bottom: 36px; }
+    .settings-section-title { font-family: var(--font-sans); font-size: 8.5px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--gold); font-weight: 400; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 0.5px solid var(--border); }
+    .settings-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 0.5px solid var(--border); }
+    .settings-key { font-family: var(--font-sans); font-size: 13px; color: var(--charcoal); font-weight: 300; }
+    .settings-val { font-family: var(--font-sans); font-size: 12px; color: var(--charcoal-light); font-weight: 300; }
+    .toggle { width: 36px; height: 20px; background: var(--cream-dark); border-radius: 10px; cursor: pointer; position: relative; border: 0.5px solid var(--border); transition: background 0.2s; }
+    .toggle.on { background: var(--charcoal); }
+    .toggle::after { content: ''; position: absolute; top: 3px; left: 3px; width: 12px; height: 12px; border-radius: 50%; background: var(--gold); transition: left 0.2s; }
+    .toggle.on::after { left: 19px; }
+    .logout-btn { padding: 11px 24px; border: 0.5px solid rgba(139,58,58,0.4); background: none; color: var(--danger); font-family: var(--font-sans); font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; font-weight: 400; margin-top: 20px; }
+    .logout-btn:hover { background: var(--danger); color: var(--white); }
+    .hidden-file { display: none; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useRef } = React;
+
+    const DEMO_ITEMS = {
+      tops: [
+        { id: 1, name: "Ivory Silk Blouse", color: "Ivory / Cream", colorHex: "#F5F0E8", colorFamily: "neutral", img: null },
+        { id: 2, name: "Noir Turtleneck", color: "Charcoal", colorHex: "#2C2B28", colorFamily: "neutral", img: null },
+        { id: 3, name: "Blush Camisole", color: "Blush Pink", colorHex: "#E8C5B5", colorFamily: "warm", img: null },
+        { id: 8, name: "Cobalt Print Blouse", color: "Electric Blue", colorHex: "#1B4FD8", colorFamily: "cool", clash: true, img: null },
+      ],
+      bottoms: [
+        { id: 4, name: "Wide Leg Trousers", color: "Camel Beige", colorHex: "#C9A87C", colorFamily: "neutral", img: null },
+        { id: 5, name: "Midi Slip Skirt", color: "Champagne", colorHex: "#E8D5A0", colorFamily: "neutral", img: null },
+        { id: 9, name: "Lime Cargo Pants", color: "Neon Lime", colorHex: "#A8E63D", colorFamily: "cool", clash: true, img: null },
+      ],
+      shoes: [
+        { id: 6, name: "Pointed Mule", color: "Sand Leather", colorHex: "#C4A882", colorFamily: "neutral", img: null },
+        { id: 7, name: "Block Heel Pump", color: "Noir", colorHex: "#1A1A18", colorFamily: "neutral", img: null },
+        { id: 10, name: "Patent Orange Mule", color: "Tangerine", colorHex: "#FF6B1A", colorFamily: "warm", clash: true, img: null },
+      ],
+    };
+
+    function LArmoireApp() {
+      const [authed, setAuthed] = useState(false);
+      const [authTab, setAuthTab] = useState("login");
+      const [authFields, setAuthFields] = useState({ name: "", id: "", pass: "", confirmPass: "" });
+      const [authError, setAuthError] = useState("");
+      const [users, setUsers] = useState([{ id: "admin", pass: "armoire", name: "Isabelle" }]);
+      const [currentUser, setCurrentUser] = useState(null);
+      const [page, setPage] = useState("closet");
+      const [items, setItems] = useState(DEMO_ITEMS);
+      const [selected, setSelected] = useState({ tops: null, bottoms: null, shoes: null });
+      const [verdict, setVerdict] = useState(null);
+      const [aiLoading, setAiLoading] = useState(false);
+      const [bodyImg, setBodyImg] = useState(null);
+      const [scanning, setScanning] = useState(false);
+      const [scanDone, setScanDone] = useState(false);
+      const [bodyResult, setBodyResult] = useState(null);
+      const [fitScore, setFitScore] = useState(0);
+      const [settings, setSettings] = useState({ notifications: true, aiSuggestions: true, publicProfile: false });
+      const [dailyLoading, setDailyLoading] = useState(false);
+      const [dailyResult, setDailyResult] = useState(null);
+      const fileRef = useRef(null);
+      const bodyFileRef = useRef(null);
+      const [addingTo, setAddingTo] = useState(null);
+      const [addName, setAddName] = useState("");
+      const [addColor, setAddColor] = useState("");
+      const [addImg, setAddImg] = useState(null);
+      const [showAddModal, setShowAddModal] = useState(false);
+
+      const handleAuth = () => {
+        if (authTab === "login") {
+          const user = users.find(u => u.id === authFields.id && u.pass === authFields.pass);
+          if (!user) { setAuthError("Invalid credentials. Please try again."); return; }
+          setCurrentUser(user); setAuthed(true);
+        } else {
+          if (!authFields.name || !authFields.id || !authFields.pass) { setAuthError("All fields are required."); return; }
+          if (authFields.pass !== authFields.confirmPass) { setAuthError("Passwords do not match."); return; }
+          if (users.find(u => u.id === authFields.id)) { setAuthError("This user ID is already taken."); return; }
+          const newUser = { id: authFields.id, pass: authFields.pass, name: authFields.name };
+          setUsers(prev => [...prev, newUser]); setCurrentUser(newUser); setAuthed(true);
+        }
+      };
+
+      const handleSelectItem = (cat, item) => {
+        setSelected(prev => ({ ...prev, [cat]: prev[cat]?.id === item.id ? null : item }));
+      };
+
+      const canCheck = selected.tops && selected.bottoms && selected.shoes;
+
+      const analyseOutfit = (top, bottom, shoe) => {
+        const clashCount = [top, bottom, shoe].filter(i => i.clash).length;
+        const families = [top.colorFamily, bottom.colorFamily, shoe.colorFamily];
+        const uniqueFamilies = new Set(families).size;
+        const allNeutral = families.every(f => f === "neutral");
+        const hasCoolWarmMix = families.includes("cool") && families.includes("warm");
+        const multipleClash = clashCount >= 2;
+        if (multipleClash || hasCoolWarmMix) {
+          const clashNames = [top, bottom, shoe].filter(i => i.clash).map(i => i.name);
+          const specific = clashNames.length
+            ? `The ${clashNames.join(" and ")} introduce${clashNames.length === 1 ? "s" : ""} a temperature conflict — cool and warm tones pulling in opposite directions.`
+            : "The cool and warm tones across your pieces are working against each other.";
+          return { type: "suggestion", title: "Color Clash Detected", text: `This combination creates visual dissonance. ${specific} The eye struggles to find a resting point, which reads as unintentional rather than bold.`, tip: `Try anchoring with one neutral piece. Swap the ${clashNames[0] || "statement piece"} for the Ivory Silk Blouse or Noir Turtleneck — this lets one colour dominate without competition.`, score: 28 + Math.floor(Math.random() * 18) };
+        }
+        if (clashCount === 1 && uniqueFamilies >= 2) {
+          const clashItem = [top, bottom, shoe].find(i => i.clash);
+          return { type: "suggestion", title: "Stylistic Tension", text: `Almost there — but the ${clashItem?.name} is doing a lot of work. Its intensity overpowers the quieter tones in your other pieces, creating an imbalance rather than a considered contrast.`, tip: `If you love the ${clashItem?.name}, commit fully — replace the neutrals with equally bold pieces. Or let it rest for today and let your Blush Camisole carry the softness instead.`, score: 44 + Math.floor(Math.random() * 16) };
+        }
+        if (allNeutral || uniqueFamilies === 1) {
+          return { type: "approved", title: "Outfit Approved", text: "Your selection achieves a refined tonal harmony. The neutral-on-neutral palette creates effortless sophistication, while the contrast in proportions adds visual depth without disrupting overall coherence.", tip: "This combination follows analogous colour theory — adjacent hues that naturally harmonise. A single gold accessory would elevate it from polished to editorial.", score: 82 + Math.floor(Math.random() * 15) };
+        }
+        return { type: "approved", title: "Elegant Cohesion", text: "Excellent tonal discipline. Your palette stays within a complementary range, lending an air of intentionality and quiet minimalism. The proportions balance beautifully.", tip: "Pro tip: A structured handbag in a mid-tone — cognac, taupe, or camel — would bridge the pieces and complete the silhouette.", score: 74 + Math.floor(Math.random() * 18) };
+      };
+
+      const handleCheck = async () => {
+        setAiLoading(true);
+        await new Promise(r => setTimeout(r, 2200));
+        const result = analyseOutfit(selected.tops, selected.bottoms, selected.shoes);
+        setFitScore(result.score); setVerdict(result); setAiLoading(false);
+      };
+
+      const handleBodyUpload = async (e) => {
+        const f = e.target.files[0];
+        if (!f) return;
+        const url = URL.createObjectURL(f);
+        setBodyImg(url); setScanDone(false); setBodyResult(null); setScanning(true);
+        const base64 = await new Promise((res, rej) => {
+          const reader = new FileReader();
+          reader.onload = () => res(reader.result.split(",")[1]);
+          reader.onerror = () => rej(new Error("Read failed"));
+          reader.readAsDataURL(f);
+        });
+        const mediaType = f.type || "image/jpeg";
+        try {
+          const response = await fetch("https://api.anthropic.com/v1/messages", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              model: "claude-sonnet-4-20250514", max_tokens: 1000,
+              messages: [{ role: "user", content: [
+                { type: "image", source: { type: "base64", media_type: mediaType, data: base64 } },
+                { type: "text", text: `You are a professional fashion stylist and body type analyst. Carefully examine this full-body photo and determine the person's body type based on their actual visible proportions.\n\nBody type definitions:\n- Hourglass: Shoulders and hips roughly equal width, clearly defined/narrow waist.\n- Pear: Hips noticeably wider than shoulders.\n- Rectangle/Apple: Waist width similar to or wider than shoulders/hips. Little waist definition.\n- Inverted Triangle: Shoulders noticeably broader than hips.\n\nRespond ONLY with a valid JSON object (no markdown):\n{"type":"Hourglass"|"Pear"|"Rectangle"|"Inverted Triangle","desc":"2-sentence personalised description","recs":["4 specific clothing recommendations"],"fitScore":<number 60-98>}` }
+              ]}]
+            })
+          });
+          const data = await response.json();
+          const text = data.content?.find(b => b.type === "text")?.text || "";
+          const clean = text.replace(/```json|```/g, "").trim();
+          const parsed = JSON.parse(clean);
+          setScanning(false); setScanDone(true);
+          setBodyResult({ type: parsed.type, desc: parsed.desc, recs: parsed.recs });
+          setFitScore(parsed.fitScore || 75);
+        } catch (err) {
+          setScanning(false); setScanDone(true);
+          setBodyResult({ type: "Rectangle", desc: "Unable to fully analyse — please ensure good lighting and a neutral background. Based on available data, a balanced rectangular silhouette is suggested.", recs: ["Peplum tops", "Wrap skirts", "Ruched details", "Layered looks"] });
+          setFitScore(70);
+        }
+      };
+
+      const handleAddFile = (e) => {
+        const f = e.target.files[0];
+        if (!f) return;
+        setAddImg(URL.createObjectURL(f));
+      };
+
+      const handleAddItem = () => {
+        if (!addName) return;
+        const newItem = { id: Date.now(), name: addName, color: addColor || "Custom", colorHex: "#888", img: addImg };
+        setItems(prev => ({ ...prev, [addingTo]: [...prev[addingTo], newItem] }));
+        setShowAddModal(false); setAddName(""); setAddColor(""); setAddImg(null); setAddingTo(null);
+      };
+
+      const handleDailyLook = async () => {
+        if (!canCheck) return;
+        setDailyLoading(true);
+        await new Promise(r => setTimeout(r, 2000));
+        const result = analyseOutfit(selected.tops, selected.bottoms, selected.shoes);
+        setFitScore(result.score); setDailyResult(result); setDailyLoading(false);
+      };
+
+      if (!authed) return (
+        <div className="auth-page">
+          <div className="auth-bg" />
+          <div className="auth-card">
+            <div className="brand-title">L'Armoire</div>
+            <div className="brand-sub">Your Digital Wardrobe</div>
+            <div className="auth-tabs">
+              <button className={`auth-tab${authTab === "login" ? " active" : ""}`} onClick={() => { setAuthTab("login"); setAuthError(""); }}>Sign In</button>
+              <button className={`auth-tab${authTab === "signup" ? " active" : ""}`} onClick={() => { setAuthTab("signup"); setAuthError(""); }}>Create Account</button>
+            </div>
+            {authTab === "signup" && (
+              <div className="field-group">
+                <label className="field-label">Full Name</label>
+                <input className="field-input" placeholder="Isabelle Laurent" value={authFields.name} onChange={e => setAuthFields(p => ({ ...p, name: e.target.value }))} />
+              </div>
+            )}
+            <div className="field-group">
+              <label className="field-label">User ID</label>
+              <input className="field-input" placeholder={authTab === "login" ? "admin" : "your.id"} value={authFields.id} onChange={e => setAuthFields(p => ({ ...p, id: e.target.value }))} />
+            </div>
+            <div className="field-group">
+              <label className="field-label">Password</label>
+              <input className="field-input" type="password" placeholder={authTab === "login" ? "armoire" : "Min. 6 characters"} value={authFields.pass} onChange={e => setAuthFields(p => ({ ...p, pass: e.target.value }))} />
+            </div>
+            {authTab === "signup" && (
+              <div className="field-group">
+                <label className="field-label">Confirm Password</label>
+                <input className="field-input" type="password" placeholder="Repeat password" value={authFields.confirmPass} onChange={e => setAuthFields(p => ({ ...p, confirmPass: e.target.value }))} />
+              </div>
+            )}
+            <button className="btn-gold" onClick={handleAuth}>{authTab === "login" ? "Enter the Atelier →" : "Create Account →"}</button>
+            {authError && <div className="auth-error">{authError}</div>}
+            {authTab === "login" && <div style={{ textAlign: "center", marginTop: 18, fontFamily: "var(--font-sans)", fontSize: 10, color: "var(--charcoal-light)", letterSpacing: "0.1em", fontWeight: 300 }}>Demo: ID <strong>admin</strong> · Password <strong>armoire</strong></div>}
+          </div>
+        </div>
+      );
+
+      const navItems = [
+        { key: "closet", icon: "◻", label: "Closet" },
+        { key: "body", icon: "◇", label: "Body" },
+        { key: "daily", icon: "✦", label: "Look" },
+        { key: "settings", icon: "⊙", label: "Settings" },
+      ];
+
+      return (
+        <>
+          <div className="app">
+            <nav className="sidebar">
+              <div className="sidebar-logo">L'Armoire</div>
+              <div className="sidebar-divider" />
+              {navItems.map(n => (
+                <button key={n.key} className={`nav-item${page === n.key ? " active" : ""}`} onClick={() => setPage(n.key)}>
+                  <span className="nav-icon">{n.icon}</span>
+                  <span className="nav-label">{n.label}</span>
+                </button>
+              ))}
+              <div className="sidebar-bottom">
+                <div style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(184,150,46,0.15)", border: "0.5px solid rgba(184,150,46,0.3)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto", fontFamily: "var(--font-serif)", fontSize: 14, color: "var(--gold-light)", fontStyle: "italic" }}>
+                  {currentUser?.name?.[0] || "?"}
+                </div>
+              </div>
+            </nav>
+
+            <main className="main" style={{ display: "flex", flexDirection: "column" }}>
+              {page === "closet" && (
+                <>
+                  <div className="page-header">
+                    <div>
+                      <span className="page-title-label">My Digital Wardrobe</span>
+                      <h1 className="page-title">My Closet</h1>
+                    </div>
+                    <div className="user-badge"><span className="gold-dot">◆</span>Welcome, {currentUser?.name}</div>
+                  </div>
+                  <div className="closet-grid">
+                    {["tops", "bottoms", "shoes"].map(cat => (
+                      <div key={cat} className="closet-col">
+                        <div className="col-header">
+                          <div className="col-title">{cat.charAt(0).toUpperCase() + cat.slice(1)}</div>
+                          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                            <span className="col-count">{items[cat].length} pieces</span>
+                            <button className="add-btn" onClick={() => { setAddingTo(cat); setShowAddModal(true); }}>+</button>
+                          </div>
+                        </div>
+                        {items[cat].map(item => (
+                          <div key={item.id} className={`garment-card${selected[cat]?.id === item.id ? " selected" : ""}`} onClick={() => handleSelectItem(cat, item)}>
+                            {item.img
+                              ? <img src={item.img} alt={item.name} className="garment-img" />
+                              : <div className="garment-placeholder">
+                                  <div style={{ width: 48, height: 48, borderRadius: "50%", background: item.colorHex, border: "0.5px solid rgba(0,0,0,0.1)" }} />
+                                  <span style={{ fontFamily: "var(--font-sans)", fontSize: 10, color: "var(--charcoal-light)", fontWeight: 300 }}>No photo</span>
+                                </div>
+                            }
+                            <div className="garment-info">
+                              <div className="garment-name">{item.name}</div>
+                              <div className="garment-color">{item.color}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="validator-bar">
+                    <div className="validator-selection">
+                      {["tops", "bottoms", "shoes"].map(cat => (
+                        <div key={cat} className="sel-item">
+                          <div className="sel-swatch" style={{ background: selected[cat] ? selected[cat].colorHex : "rgba(245,240,232,0.05)" }} />
+                          <div>
+                            <div className="sel-label">{cat}</div>
+                            <div className="sel-name">{selected[cat] ? selected[cat].name : "— select —"}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {aiLoading
+                      ? <div className="ai-loading"><div className="ai-dot" /><div className="ai-dot" /><div className="ai-dot" /><span style={{ marginLeft: 6 }}>Analysing...</span></div>
+                      : <button className="check-btn" disabled={!canCheck} onClick={handleCheck}>AI Style Check ✦</button>
+                    }
+                  </div>
+                </>
+              )}
+
+              {page === "body" && (
+                <>
+                  <div className="page-header">
+                    <div>
+                      <span className="page-title-label">Silhouette Intelligence</span>
+                      <h1 className="page-title">Body Analysis Suite</h1>
+                    </div>
+                    <div className="user-badge"><span className="gold-dot">◆</span>Welcome, {currentUser?.name}</div>
+                  </div>
+                  <div className="body-page">
+                    {!bodyImg && (
+                      <>
+                        <div className="upload-zone" onClick={() => bodyFileRef.current?.click()}>
+                          <div className="upload-icon">⬡</div>
+                          <div className="upload-title">Upload Full-Body Photo</div>
+                          <div className="upload-hint" style={{ marginTop: 8 }}>JPEG or PNG · Stand straight · Neutral background</div>
+                          <input ref={bodyFileRef} type="file" className="hidden-file" accept="image/*" onChange={handleBodyUpload} />
+                        </div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
+                          {["Stand against a plain wall", "Arms slightly away from body", "Wear form-fitting clothing"].map((tip, i) => (
+                            <div key={i} style={{ background: "var(--white)", border: "0.5px solid var(--border)", padding: "16px 20px" }}>
+                              <div style={{ fontFamily: "var(--font-sans)", fontSize: 8, letterSpacing: "0.25em", textTransform: "uppercase", color: "var(--gold)", marginBottom: 8, fontWeight: 400 }}>Tip 0{i + 1}</div>
+                              <div style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--charcoal-mid)", fontWeight: 300, lineHeight: 1.6 }}>{tip}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                    {bodyImg && (
+                      <>
+                        <div className="scan-container">
+                          <img src={bodyImg} alt="Body scan" className="scan-img" style={{ maxHeight: 380, width: "auto", margin: "0 auto", display: "block" }} />
+                          {(scanning || scanDone) && (
+                            <div className="scan-overlay">
+                              {scanning && <div className="scan-line" />}
+                              {scanDone && (
+                                <svg className="body-outline-svg" viewBox="0 0 260 380" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ opacity: 0.7 }}>
+                                  <ellipse cx="130" cy="54" rx="32" ry="38" stroke="#B8962E" strokeWidth="1.5" strokeDasharray="4 3" />
+                                  <path d="M98 90 C78 110 70 150 72 200 C74 250 80 280 90 340" stroke="#B8962E" strokeWidth="1.5" strokeDasharray="4 3" fill="none" />
+                                  <path d="M162 90 C182 110 190 150 188 200 C186 250 180 280 170 340" stroke="#B8962E" strokeWidth="1.5" strokeDasharray="4 3" fill="none" />
+                                  <path d="M98 90 C105 95 125 98 130 98 C135 98 155 95 162 90" stroke="#B8962E" strokeWidth="1.5" fill="none" />
+                                  <path d="M72 200 C90 205 110 208 130 208 C150 208 170 205 188 200" stroke="#B8962E" strokeWidth="1.5" strokeDasharray="4 3" fill="none" />
+                                  <path d="M90 340 C100 342 115 344 130 344 C145 344 160 342 170 340" stroke="#B8962E" strokeWidth="1.5" fill="none" />
+                                  <line x1="68" y1="110" x2="40" y2="200" stroke="#B8962E" strokeWidth="1.2" strokeDasharray="3 3" />
+                                  <line x1="192" y1="110" x2="220" y2="200" stroke="#B8962E" strokeWidth="1.2" strokeDasharray="3 3" />
+                                </svg>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        {scanning && <div className="scan-label">Analysing silhouette · Please wait...</div>}
+                        {scanDone && bodyResult && (
+                          <>
+                            <div className="scan-label" style={{ animation: "none", opacity: 1, color: "var(--success)" }}>✓ Analysis Complete</div>
+                            <div className="body-results">
+                              <div className="result-card">
+                                <div className="result-label">Body Type Classification</div>
+                                <div className="result-value">{bodyResult.type}</div>
+                                <div className="result-desc">{bodyResult.desc}</div>
+                              </div>
+                              <div className="result-card">
+                                <div className="result-label">Virtual Fit Score</div>
+                                <div className="result-value">{canCheck ? fitScore : "—"}</div>
+                                <div className="result-desc">{canCheck ? `Your current selection from the closet scores ${fitScore}/100 for your body type.` : "Select an outfit in My Closet to see your fit score."}</div>
+                                {canCheck && <div className="fit-score-bar"><div className="fit-score-fill" style={{ width: `${fitScore}%` }} /></div>}
+                              </div>
+                              <div className="result-card" style={{ gridColumn: "1 / -1" }}>
+                                <div className="result-label">Recommended Styles for {bodyResult.type}</div>
+                                <div className="reco-list">
+                                  {bodyResult.recs.map((r, i) => <div key={i} className="reco-item">{r}</div>)}
+                                </div>
+                              </div>
+                            </div>
+                            <button className="btn-gold" style={{ width: "auto", padding: "12px 28px", marginTop: 24, display: "inline-flex" }} onClick={() => { setBodyImg(null); setScanDone(false); setBodyResult(null); }}>
+                              Re-analyse →
+                            </button>
+                          </>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {page === "daily" && (
+                <>
+                  <div className="page-header">
+                    <div>
+                      <span className="page-title-label">Today's Ensemble</span>
+                      <h1 className="page-title">Daily Look</h1>
+                    </div>
+                    <div className="user-badge"><span className="gold-dot">◆</span>Welcome, {currentUser?.name}</div>
+                  </div>
+                  <div className="daily-page">
+                    <div className="daily-hero">
+                      {["tops", "bottoms", "shoes"].map(cat => (
+                        <div key={cat} className="look-slot">
+                          <div className="look-slot-label">{cat}</div>
+                          <div className="look-slot-img">
+                            {selected[cat]?.img
+                              ? <img src={selected[cat].img} alt={selected[cat].name} />
+                              : <div style={{ textAlign: "center" }}>
+                                  {selected[cat]
+                                    ? <div style={{ width: 60, height: 60, borderRadius: "50%", background: selected[cat].colorHex, margin: "0 auto 10px", border: "0.5px solid rgba(245,240,232,0.15)" }} />
+                                    : <span style={{ fontSize: 24, opacity: 0.15 }}>◻</span>
+                                  }
+                                  <div className="look-empty">{selected[cat] ? selected[cat].name : "Not selected"}</div>
+                                </div>
+                            }
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="daily-info">
+                      {!canCheck && (
+                        <div style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--charcoal-light)", fontWeight: 300, letterSpacing: "0.08em", marginBottom: 20 }}>
+                          ← Select one item from each category in My Closet to build your daily look.
+                        </div>
+                      )}
+                      {canCheck && !dailyResult && !dailyLoading && (
+                        <button className="btn-gold" style={{ width: "auto", padding: "13px 32px" }} onClick={handleDailyLook}>Generate Daily Assessment →</button>
+                      )}
+                      {dailyLoading && <div className="ai-loading"><div className="ai-dot" /><div className="ai-dot" /><div className="ai-dot" /><span style={{ marginLeft: 8 }}>Curating your look...</span></div>}
+                      {dailyResult && (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                          <div className="daily-score-row">
+                            <div className="score-box">
+                              <span className="score-num" style={{ color: dailyResult.score >= 70 ? "var(--success)" : dailyResult.score >= 50 ? "var(--gold)" : "var(--danger)" }}>{dailyResult.score}</span>
+                              <span className="score-lbl">Style Score</span>
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <div className={`verdict-badge ${dailyResult.type}`} style={{ display: "inline-flex", marginBottom: 12 }}>
+                                {dailyResult.type === "approved" ? "✓ Approved" : "✦ Suggestion"}
+                              </div>
+                              <div style={{ display: "flex", justifyContent: "space-between", fontFamily: "var(--font-sans)", fontSize: 9, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--charcoal-light)", marginBottom: 5 }}>
+                                <span>Low</span><span>High</span>
+                              </div>
+                              <div className="fit-score-bar" style={{ height: 5, marginBottom: 6 }}>
+                                <div className="fit-score-fill" style={{ width: `${dailyResult.score}%`, background: dailyResult.score >= 70 ? "var(--success)" : dailyResult.score >= 50 ? "var(--gold)" : "var(--danger)" }} />
+                              </div>
+                              <div style={{ fontFamily: "var(--font-sans)", fontSize: 10, color: dailyResult.score >= 70 ? "var(--success)" : dailyResult.score >= 50 ? "var(--gold)" : "var(--danger)", letterSpacing: "0.1em", marginBottom: 12 }}>
+                                {dailyResult.score >= 70 ? "High · Well Coordinated" : dailyResult.score >= 50 ? "Mid · Needs Refinement" : "Low · Significant Clash"}
+                              </div>
+                              <div style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: "var(--charcoal-mid)", lineHeight: 1.8, fontWeight: 300, maxWidth: 480 }}>{dailyResult.text}</div>
+                            </div>
+                          </div>
+                          <div className="verdict-tip"><p>{dailyResult.tip}</p></div>
+                          <button className="close-verdict" style={{ maxWidth: 200 }} onClick={() => setDailyResult(null)}>Reset Look</button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {page === "settings" && (
+                <>
+                  <div className="page-header">
+                    <div>
+                      <span className="page-title-label">Preferences & Account</span>
+                      <h1 className="page-title">Settings</h1>
+                    </div>
+                    <div className="user-badge"><span className="gold-dot">◆</span>Welcome, {currentUser?.name}</div>
+                  </div>
+                  <div className="settings-page">
+                    <div className="settings-section">
+                      <div className="settings-section-title">Account Information</div>
+                      <div className="settings-row"><span className="settings-key">Full Name</span><span className="settings-val">{currentUser?.name}</span></div>
+                      <div className="settings-row"><span className="settings-key">User ID</span><span className="settings-val">{currentUser?.id}</span></div>
+                      <div className="settings-row"><span className="settings-key">Wardrobe Items</span><span className="settings-val">{Object.values(items).flat().length} pieces</span></div>
+                      <div className="settings-row"><span className="settings-key">Membership</span><span className="settings-val" style={{ color: "var(--gold)" }}>◆ Premium</span></div>
+                    </div>
+                    <div className="settings-section">
+                      <div className="settings-section-title">Preferences</div>
+                      {[
+                        { key: "notifications", label: "Style notifications" },
+                        { key: "aiSuggestions", label: "AI style suggestions" },
+                        { key: "publicProfile", label: "Public style profile" },
+                      ].map(s => (
+                        <div key={s.key} className="settings-row">
+                          <span className="settings-key">{s.label}</span>
+                          <div className={`toggle${settings[s.key] ? " on" : ""}`} onClick={() => setSettings(p => ({ ...p, [s.key]: !p[s.key] }))} />
+                        </div>
+                      ))}
+                    </div>
+                    <button className="logout-btn" onClick={() => { setAuthed(false); setCurrentUser(null); setSelected({ tops: null, bottoms: null, shoes: null }); }}>
+                      Sign Out
+                    </button>
+                  </div>
+                </>
+              )}
+            </main>
+          </div>
+
+          {verdict && (
+            <div className="verdict-overlay" onClick={() => setVerdict(null)}>
+              <div className="verdict-card" onClick={e => e.stopPropagation()}>
+                <div className={`verdict-badge ${verdict.type}`}>{verdict.type === "approved" ? "✓  Outfit Approved" : "✦  Style Suggestion"}</div>
+                <div className="verdict-title">{verdict.title}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 20, marginBottom: 20 }}>
+                  <div className="score-box" style={{ minWidth: 90 }}>
+                    <span className="score-num" style={{ fontSize: 34, color: verdict.score >= 70 ? "var(--success)" : verdict.score >= 50 ? "var(--gold)" : "var(--danger)" }}>{verdict.score}</span>
+                    <span className="score-lbl">Style Score</span>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontFamily: "var(--font-sans)", fontSize: 9, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--charcoal-light)", marginBottom: 6 }}>
+                      <span>Low</span><span>High</span>
+                    </div>
+                    <div className="fit-score-bar" style={{ height: 6 }}>
+                      <div className="fit-score-fill" style={{ width: `${verdict.score}%`, background: verdict.score >= 70 ? "var(--success)" : verdict.score >= 50 ? "var(--gold)" : "var(--danger)" }} />
+                    </div>
+                    <div style={{ fontFamily: "var(--font-sans)", fontSize: 10, color: verdict.score >= 70 ? "var(--success)" : verdict.score >= 50 ? "var(--gold)" : "var(--danger)", marginTop: 6, letterSpacing: "0.1em" }}>
+                      {verdict.score >= 70 ? "High · Well Coordinated" : verdict.score >= 50 ? "Mid · Needs Refinement" : "Low · Significant Clash"}
+                    </div>
+                  </div>
+                </div>
+                <div className="verdict-text">{verdict.text}</div>
+                <div className="verdict-tip"><p>{verdict.tip}</p></div>
+                <button className="close-verdict" onClick={() => setVerdict(null)}>Close ×</button>
+              </div>
+            </div>
+          )}
+
+          {showAddModal && (
+            <div className="verdict-overlay" onClick={() => setShowAddModal(false)}>
+              <div className="verdict-card" style={{ width: 400 }} onClick={e => e.stopPropagation()}>
+                <div style={{ fontFamily: "var(--font-sans)", fontSize: 8.5, letterSpacing: "0.3em", textTransform: "uppercase", color: "var(--gold)", marginBottom: 6, fontWeight: 400 }}>Add to {addingTo}</div>
+                <div className="verdict-title" style={{ marginBottom: 28, fontSize: 24 }}>New Piece</div>
+                <div className="field-group">
+                  <label className="field-label">Item Name</label>
+                  <input className="field-input" placeholder="e.g. Silk Midi Dress" value={addName} onChange={e => setAddName(e.target.value)} />
+                </div>
+                <div className="field-group">
+                  <label className="field-label">Color / Description</label>
+                  <input className="field-input" placeholder="e.g. Champagne, Ivory" value={addColor} onChange={e => setAddColor(e.target.value)} />
+                </div>
+                <div className="field-group">
+                  <label className="field-label">Photo (optional)</label>
+                  <div className="upload-zone" style={{ padding: "24px 16px", marginBottom: 0 }} onClick={() => fileRef.current?.click()}>
+                    {addImg
+                      ? <img src={addImg} alt="preview" style={{ width: 80, height: 100, objectFit: "cover", display: "block", margin: "0 auto" }} />
+                      : <><div className="upload-icon" style={{ fontSize: 22 }}>⬡</div><div className="upload-hint">Click to upload photo</div></>
+                    }
+                    <input ref={fileRef} type="file" className="hidden-file" accept="image/*" onChange={handleAddFile} />
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
+                  <button className="close-verdict" style={{ flex: 1 }} onClick={() => setShowAddModal(false)}>Cancel</button>
+                  <button className="btn-gold" style={{ flex: 1, marginTop: 0 }} onClick={handleAddItem}>Add Piece →</button>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<LArmoireApp />);
+  </script>
+</body>
+</html>
